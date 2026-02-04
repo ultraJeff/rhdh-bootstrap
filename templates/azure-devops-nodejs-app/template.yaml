@@ -75,6 +75,26 @@ spec:
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
 
+    - id: createPipeline
+      name: Create Azure Pipeline
+      action: azure:pipeline:create
+      input:
+        organization: ${{ parameters.organization }}
+        project: ${{ parameters.project }}
+        folder: /
+        name: ${{ parameters.name }}-ci
+        repositoryId: ${{ parameters.name }}
+        repositoryName: ${{ parameters.name }}
+        yamlPath: azure-pipelines.yaml
+
+    - id: runPipeline
+      name: Run Pipeline
+      action: azure:pipeline:run
+      input:
+        organization: ${{ parameters.organization }}
+        project: ${{ parameters.project }}
+        pipelineId: ${{ steps['createPipeline'].output.pipelineId }}
+
     - id: register
       name: Register in Catalog
       action: catalog:register
@@ -86,6 +106,9 @@ spec:
     links:
       - title: Repository
         url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Pipeline Run
+        url: ${{ steps['runPipeline'].output.pipelineRunUrl }}
+        icon: dashboard
       - title: Open in catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}

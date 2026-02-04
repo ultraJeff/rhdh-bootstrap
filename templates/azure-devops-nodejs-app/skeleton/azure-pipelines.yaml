@@ -2,8 +2,9 @@
 trigger:
   - main
 
+# Use self-hosted agent pool on OpenShift
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'OpenShift Pool'
 
 variables:
   NODE_VERSION: '20.x'

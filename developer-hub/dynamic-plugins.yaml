@@ -41,3 +41,6 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-azure-devops-backend-dynamic
         disabled: false
+      # Azure Pipelines scaffolder actions (azure:pipeline:create, azure:pipeline:run)
+      - package: ./dynamic-plugins/dist/parfuemerie-douglas-scaffolder-backend-module-azure-repositories-dynamic
+        disabled: false
