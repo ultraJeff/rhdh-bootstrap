@@ -71,8 +71,6 @@ spec:
       name: Publish to Azure DevOps
       action: publish:azure
       input:
-        allowedHosts:
-          - dev.azure.com
         description: ${{ parameters.description }}
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
