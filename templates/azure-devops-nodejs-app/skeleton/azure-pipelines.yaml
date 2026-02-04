@@ -1,4 +1,4 @@
-# Azure Pipelines CI for ${{ values.name }}
+# Azure Pipelines CI/CD for ${{ values.name }}
 trigger:
   - main
 
@@ -8,6 +8,14 @@ pool:
 
 variables:
   NODE_VERSION: '20.x'
+  APP_NAME: '${{ values.name }}'
+  NAMESPACE: '${{ values.namespace }}'
+  IMAGE_REGISTRY: '${{ values.imageRegistry }}'
+  {%- if values.imageRegistry == 'openshift' %}
+  IMAGE_URL: 'image-registry.openshift-image-registry.svc:5000/$(NAMESPACE)/$(APP_NAME)'
+  {%- else %}
+  IMAGE_URL: '${{ values.acrName }}.azurecr.io/$(APP_NAME)'
+  {%- endif %}
 
 stages:
   - stage: Build
@@ -39,3 +47,61 @@ stages:
               pathToPublish: 'dist'
               artifactName: 'app'
             displayName: 'Publish artifacts'
+
+  - stage: BuildImage
+    displayName: 'Build Container Image'
+    dependsOn: Build
+    jobs:
+      - job: S2IBuild
+        displayName: 'S2I Build and Push'
+        steps:
+          - script: |
+              echo "Building container image for $(APP_NAME) in namespace $(NAMESPACE)"
+              echo "Image will be pushed to: $(IMAGE_URL):$(Build.BuildId)"
+            displayName: 'Show build info'
+
+          - script: |
+              # Install oc CLI if not present
+              if ! command -v oc &> /dev/null; then
+                echo "Installing oc CLI..."
+                curl -sLO https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
+                tar -xzf openshift-client-linux.tar.gz
+                sudo mv oc /usr/local/bin/
+                rm -f openshift-client-linux.tar.gz kubectl
+              fi
+              oc version --client
+            displayName: 'Install OpenShift CLI'
+
+          - script: |
+              # Create ImageStream if it doesn't exist
+              oc get imagestream $(APP_NAME) -n $(NAMESPACE) || \
+                oc create imagestream $(APP_NAME) -n $(NAMESPACE)
+              
+              # Create or update BuildConfig for S2I
+              oc get buildconfig $(APP_NAME) -n $(NAMESPACE) || \
+                oc new-build --name=$(APP_NAME) \
+                  --image-stream=openshift/nodejs:20-ubi8 \
+                  --binary=true \
+                  --to=$(APP_NAME):$(Build.BuildId) \
+                  -n $(NAMESPACE)
+              
+              # Start the build from current directory
+              oc start-build $(APP_NAME) \
+                --from-dir=. \
+                --follow \
+                --wait \
+                -n $(NAMESPACE)
+              
+              # Tag as latest
+              oc tag $(APP_NAME):$(Build.BuildId) $(APP_NAME):latest -n $(NAMESPACE)
+              
+              echo "Image built and pushed to $(IMAGE_URL):$(Build.BuildId)"
+            displayName: 'S2I Build on OpenShift'
+            condition: eq(variables['IMAGE_REGISTRY'], 'openshift')
+
+          - script: |
+              echo "ACR build not yet implemented"
+              echo "Would push to: $(IMAGE_URL):$(Build.BuildId)"
+              exit 1
+            displayName: 'Build for ACR (not implemented)'
+            condition: eq(variables['IMAGE_REGISTRY'], 'acr')

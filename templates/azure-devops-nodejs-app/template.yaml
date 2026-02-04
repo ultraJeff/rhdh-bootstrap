@@ -54,6 +54,32 @@ spec:
           description: The Azure DevOps project to create the repo in
           default: a-project
 
+    - title: Container Registry
+      required:
+        - imageRegistry
+        - namespace
+      properties:
+        imageRegistry:
+          title: Image Registry
+          type: string
+          description: Where to store the container image
+          enum:
+            - openshift
+            - acr
+          enumNames:
+            - OpenShift Internal Registry
+            - Azure Container Registry (ACR)
+          default: openshift
+        namespace:
+          title: OpenShift Namespace
+          type: string
+          description: Namespace to deploy the application to
+          default: default
+        acrName:
+          title: ACR Name
+          type: string
+          description: Azure Container Registry name (only if using ACR)
+
   steps:
     - id: fetch-skeleton
       name: Fetch Skeleton
@@ -66,6 +92,9 @@ spec:
           owner: ${{ parameters.owner }}
           organization: ${{ parameters.organization }}
           project: ${{ parameters.project }}
+          imageRegistry: ${{ parameters.imageRegistry }}
+          namespace: ${{ parameters.namespace }}
+          acrName: ${{ parameters.acrName }}
 
     - id: publish
       name: Publish to Azure DevOps
