@@ -1,0 +1,20 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description }}
+  annotations:
+    dev.azure.com/project-repo: ${{ values.project }}/${{ values.name }}
+    dev.azure.com/build-definition: ${{ values.name }}-ci
+  tags:
+    - nodejs
+    - typescript
+    - azure-devops
+  links:
+    - url: https://dev.azure.com/${{ values.organization }}/${{ values.project }}/_git/${{ values.name }}
+      title: Azure DevOps Repo
+      icon: source
+spec:
+  type: service
+  lifecycle: experimental
+  owner: ${{ values.owner | default("user:default/admin", true) }}

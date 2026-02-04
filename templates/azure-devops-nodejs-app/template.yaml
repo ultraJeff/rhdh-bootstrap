@@ -1,0 +1,93 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: azure-devops-nodejs-app
+  title: Node.js App on Azure DevOps
+  description: Create a new Node.js application with TypeScript, hosted on Azure DevOps with CI pipeline
+  tags:
+    - nodejs
+    - typescript
+    - azure-devops
+    - recommended
+spec:
+  owner: user:default/admin
+  type: service
+
+  parameters:
+    - title: Application Details
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Application Name
+          type: string
+          description: Unique name for the application (lowercase, no spaces)
+          pattern: '^[a-z0-9-]+$'
+          ui:autofocus: true
+        description:
+          title: Description
+          type: string
+          description: Brief description of the application
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: [Group, User]
+
+    - title: Azure DevOps Repository
+      required:
+        - organization
+        - project
+      properties:
+        organization:
+          title: Azure DevOps Organization
+          type: string
+          description: Your Azure DevOps organization name
+          default: jefrfranklin
+        project:
+          title: Azure DevOps Project
+          type: string
+          description: The Azure DevOps project to create the repo in
+          default: a-project
+
+  steps:
+    - id: fetch-skeleton
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          organization: ${{ parameters.organization }}
+          project: ${{ parameters.project }}
+
+    - id: publish
+      name: Publish to Azure DevOps
+      action: publish:azure
+      input:
+        allowedHosts:
+          - dev.azure.com
+        description: ${{ parameters.description }}
+        repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
+        defaultBranch: main
+
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
