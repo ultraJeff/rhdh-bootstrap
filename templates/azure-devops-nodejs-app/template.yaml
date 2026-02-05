@@ -116,6 +116,18 @@ spec:
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
 
+    - id: serialize-response
+      name: Serialize Azure Response JSON
+      action: roadiehq:utils:serialize:json
+      input:
+        data: ${{ steps['publish'].output }}
+
+    - id: debug-log-http-response
+      name: Log the Azure Response
+      action: debug:log
+      input: 
+        message: ${{ steps['serialize-response'].output.serialized }}
+
     - id: create-pipeline
       name: Create Azure Pipeline
       action: http:backstage:request
