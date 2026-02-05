@@ -121,16 +121,17 @@ spec:
       action: http:backstage:request
       input:
         method: POST
-        path: /api/proxy/azure-devops/api/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
+        path: /api/proxy/azure-devops/api/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1-preview.1
         headers:
           Content-Type: application/json
         body:
           name: ${{ parameters.name }}
-          folder: /
+          folder: null
           configuration:
             type: yaml
             path: /azure-pipelines.yaml
             repository:
+              id: ${{ steps['publish'].output.repositoryId }}
               name: ${{ parameters.name }}
               type: azureReposGit
 

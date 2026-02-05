@@ -44,3 +44,6 @@ data:
       # Azure Pipelines scaffolder actions (azure:pipeline:create, azure:pipeline:run)
       - package: ./dynamic-plugins/dist/parfuemerie-douglas-scaffolder-backend-module-azure-repositories-dynamic
         disabled: false
+      # HTTP request scaffolder action (http:backstage:request)
+      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
+        disabled: false
