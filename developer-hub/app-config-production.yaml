@@ -69,7 +69,7 @@ data:
           target: ${AZURE_DEVOPS_CATALOG_URL}
         # Azure DevOps Node.js template (from this repo)
         - type: url
-          target: https://github.com/ultraJeff/rhdh-bootstrap/blob/main/templates/azure-devops-nodejs-app/template.yaml
+          target: https://github.com/ultraJeff/rhdh-ado-bootstrap/blob/main/templates/azure-devops-nodejs-app/template.yaml
       providers:
         keycloakOrg:
           default:
