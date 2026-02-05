@@ -75,10 +75,22 @@ spec:
           type: string
           description: Namespace to deploy the application to
           default: default
+      dependencies:
         acrName:
-          title: ACR Name
-          type: string
-          description: Azure Container Registry name (only if using ACR)
+          - imageRegistry
+      allOf:
+        - if:
+            properties:
+              imageRegistry:
+                const: acr
+          then:
+            properties:
+              acrName:
+                title: ACR Name
+                type: string
+                description: Azure Container Registry name
+            required:
+              - acrName
 
   steps:
     - id: fetch-skeleton
@@ -104,25 +116,9 @@ spec:
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
 
-    - id: createPipeline
-      name: Create Azure Pipeline
-      action: azure:pipeline:create
-      input:
-        organization: ${{ parameters.organization }}
-        project: ${{ parameters.project }}
-        folder: /
-        name: ${{ parameters.name }}-ci
-        repositoryId: ${{ parameters.name }}
-        repositoryName: ${{ parameters.name }}
-        yamlPath: azure-pipelines.yaml
-
-    - id: runPipeline
-      name: Run Pipeline
-      action: azure:pipeline:run
-      input:
-        organization: ${{ parameters.organization }}
-        project: ${{ parameters.project }}
-        pipelineId: ${{ steps['createPipeline'].output.pipelineId }}
+    # Note: Pipeline must be created manually in Azure DevOps the first time.
+    # Go to Pipelines > New Pipeline > Azure Repos Git > select the repo
+    # Once created, it will auto-trigger on subsequent pushes to main.
 
     - id: register
       name: Register in Catalog
@@ -135,9 +131,6 @@ spec:
     links:
       - title: Repository
         url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Pipeline Run
-        url: ${{ steps['runPipeline'].output.pipelineRunUrl }}
-        icon: dashboard
       - title: Open in catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}
