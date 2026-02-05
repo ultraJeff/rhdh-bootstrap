@@ -116,9 +116,23 @@ spec:
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
 
-    # Note: Pipeline must be created manually in Azure DevOps the first time.
-    # Go to Pipelines > New Pipeline > Azure Repos Git > select the repo
-    # Once created, it will auto-trigger on subsequent pushes to main.
+    - id: create-pipeline
+      name: Create Azure Pipeline
+      action: http:backstage:request
+      input:
+        method: POST
+        path: /api/proxy/azure-devops/api/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
+        headers:
+          Content-Type: application/json
+        body:
+          name: ${{ parameters.name }}
+          folder: /
+          configuration:
+            type: yaml
+            path: /azure-pipelines.yaml
+            repository:
+              name: ${{ parameters.name }}
+              type: azureReposGit
 
     - id: register
       name: Register in Catalog
@@ -131,6 +145,8 @@ spec:
     links:
       - title: Repository
         url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Pipeline
+        url: https://dev.azure.com/${{ parameters.organization }}/${{ parameters.project }}/_build?definitionId=${{ steps['create-pipeline'].output.body.id }}
       - title: Open in catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}

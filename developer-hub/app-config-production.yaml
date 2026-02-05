@@ -134,6 +134,13 @@ data:
         #         minutes: 10
         #       initialDelay:
         #         seconds: 15
+    proxy:
+      endpoints:
+        /azure-devops/api:
+          target: https://dev.azure.com
+          headers:
+            Authorization: Basic ${AZURE_TOKEN_BASE64}
+          changeOrigin: true
     integrations:
       github:
         # Public GitHub access for reading templates from public repos
