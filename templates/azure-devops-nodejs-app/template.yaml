@@ -116,6 +116,12 @@ spec:
         repoUrl: dev.azure.com?organization=${{ parameters.organization }}&project=${{ parameters.project }}&repo=${{ parameters.name }}
         defaultBranch: main
 
+    - id: print-repo-id
+      name: Print Azure Repo ID
+      action: debug:log
+      input:
+        data: ${{ steps['publish'].output.repositoryId }}
+
     - id: serialize-response
       name: Serialize Azure Response JSON
       action: roadiehq:utils:serialize:json
@@ -141,10 +147,11 @@ spec:
         path: /proxy/azure-devops/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
         body:
           name: ${{ parameters.name }}
-          folder: null
+          folder: '\'
+          # folder: null
           configuration:
             type: yaml
-            path: azure-pipelines.yaml
+            path: /azure-pipelines.yaml
             repository:
               id: ${{ steps['publish'].output.repositoryId }}
               name: ${{ parameters.name }}
