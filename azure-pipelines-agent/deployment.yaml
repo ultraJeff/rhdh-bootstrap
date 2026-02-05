@@ -18,9 +18,9 @@ spec:
       serviceAccountName: azure-pipelines-agent
       containers:
         - name: agent
-          # Microsoft's Azure Pipelines agent image
-          # See: https://hub.docker.com/r/microsoft/azure-pipelines-vsts-agent
-          image: mcr.microsoft.com/azure-pipelines/vsts-agent:latest
+          # Drop-in replacement for Microsoft's agent with Ubuntu 22.04
+          # See: https://hub.docker.com/r/consultent/azure-pipelines-vsts-agent
+          image: consultent/azure-pipelines-vsts-agent:ubuntu-22.04
           env:
             - name: VSTS_ACCOUNT
               valueFrom:
