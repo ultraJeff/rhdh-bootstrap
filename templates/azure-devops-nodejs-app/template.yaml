@@ -120,7 +120,7 @@ spec:
       name: Print Azure Repo ID
       action: debug:log
       input:
-        data: ${{ steps['publish'].output.repositoryId }}
+        message: ${{ steps['publish'].output.repositoryId }}
 
     - id: serialize-response
       name: Serialize Azure Response JSON
