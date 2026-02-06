@@ -141,7 +141,8 @@ spec:
         method: POST
         # Commented out, since these are set by the proxy in Backstage
         # baseUrl: https://dev.azure.com
-        # headers:
+        headers:
+          content-type: 'application/json'
         #   Content-Type: application/json
         #   Authorization: Basic ${{ secrets.AZURE_TOKEN_BASE64 }}
         path: /proxy/azure-devops/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
