@@ -117,39 +117,37 @@ spec:
         defaultBranch: main
 
     - id: print-repo-id
-      name: Print Azure Repo ID
+      name: Log Azure Repo ID
       action: debug:log
       input:
         message: ${{ steps['publish'].output.repositoryId }}
 
-    - id: serialize-response
-      name: Serialize Azure Response JSON
-      action: roadiehq:utils:serialize:json
-      input:
-        data: ${{ steps['publish'].output }}
+    # - id: serialize-response
+    #   name: Serialize Azure Response JSON
+    #   action: roadiehq:utils:serialize:json
+    #   input:
+    #     data: ${{ steps['publish'].output }}
 
-    - id: debug-log-http-response
-      name: Log the Azure Response
-      action: debug:log
-      input: 
-        message: ${{ steps['serialize-response'].output.serialized }}
+    # - id: debug-log-http-response
+    #   name: Log the Azure Response
+    #   action: debug:log
+    #   input: 
+    #     message: ${{ steps['serialize-response'].output.serialized }}
 
     - id: create-pipeline
       name: Create Azure Pipeline
       action: http:backstage:request
       input:
         method: POST
-        # Commented out, since these are set by the proxy in Backstage
-        # baseUrl: https://dev.azure.com
+        # Content-Type must be set here to ensure body is correctly
+        # handled by the http plugin and transformed to JSON. The
+        # authorization header with token is injected by the backend
         headers:
           content-type: 'application/json'
-        #   Content-Type: application/json
-        #   Authorization: Basic ${{ secrets.AZURE_TOKEN_BASE64 }}
         path: /proxy/azure-devops/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
         body:
           name: ${{ parameters.name }}
           folder: '\'
-          # folder: null
           configuration:
             type: yaml
             path: /azure-pipelines.yaml
