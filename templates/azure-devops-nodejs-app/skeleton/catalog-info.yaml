@@ -14,6 +14,9 @@ metadata:
     - url: https://dev.azure.com/${{ values.organization }}/${{ values.project }}/_git/${{ values.name }}
       title: Azure DevOps Repo
       icon: source
+    - url: https://devspaces.apps.CLUSTER_DOMAIN_PLACEHOLDER/f?url=https://dev.azure.com/${{ values.organization }}/${{ values.project }}/_git/${{ values.name }}
+      title: Open in Dev Spaces
+      icon: cloud
 spec:
   type: service
   lifecycle: experimental

@@ -1,0 +1,79 @@
+schemaVersion: 2.2.2
+metadata:
+  name: ${{ values.name }}
+  displayName: ${{ values.name }}
+  description: ${{ values.description }}
+  language: TypeScript
+  projectType: Node.js
+  tags:
+    - Node.js
+    - TypeScript
+    - Azure DevOps
+components:
+  - name: dev
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel8:latest
+      memoryLimit: 4Gi
+      memoryRequest: 512Mi
+      cpuLimit: "2"
+      cpuRequest: 250m
+      mountSources: true
+      endpoints:
+        - name: http
+          targetPort: 3000
+          exposure: public
+          protocol: https
+        - name: debug
+          targetPort: 9229
+          exposure: internal
+      env:
+        - name: NODE_ENV
+          value: development
+        - name: PORT
+          value: "3000"
+commands:
+  - id: install
+    exec:
+      label: "Install Dependencies"
+      component: dev
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: npm install
+      group:
+        kind: build
+        isDefault: false
+  - id: build
+    exec:
+      label: "Build"
+      component: dev
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: npm run build
+      group:
+        kind: build
+        isDefault: true
+  - id: run
+    exec:
+      label: "Run"
+      component: dev
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: npm run dev
+      group:
+        kind: run
+        isDefault: true
+  - id: test
+    exec:
+      label: "Test"
+      component: dev
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: npm test
+      group:
+        kind: test
+        isDefault: true
+  - id: debug
+    exec:
+      label: "Debug"
+      component: dev
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: node --inspect-brk=0.0.0.0:9229 dist/index.js
+      group:
+        kind: debug
+        isDefault: true

@@ -47,3 +47,6 @@ data:
       # HTTP request scaffolder action (http:backstage:request)
       - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
         disabled: false
+      # Dev Spaces integration
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-devspaces
+        disabled: false

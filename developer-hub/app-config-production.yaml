@@ -170,6 +170,8 @@ data:
               authProvider: serviceAccount
               skipTLSVerify: true
               skipMetricsLookup: true
+    devSpaces:
+      defaultNamespace: <username>-devspaces
     extensions:
       installation:
         enabled: true

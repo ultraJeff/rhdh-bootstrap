@@ -1,0 +1,50 @@
+apiVersion: org.eclipse.che/v2
+kind: CheCluster
+metadata:
+  name: devspaces
+  namespace: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    # Wait for operator to be ready before creating CheCluster
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  components:
+    cheServer:
+      debug: false
+      logLevel: INFO
+    dashboard:
+      logLevel: ERROR
+    devWorkspace:
+      runningLimit: "5"
+    devfileRegistry:
+      disableInternalRegistry: false
+    imagePuller:
+      enable: false
+    pluginRegistry:
+      disableInternalRegistry: false
+  containerRegistry: {}
+  devEnvironments:
+    startTimeoutSeconds: 600
+    secondsOfRunBeforeIdling: 1800
+    maxNumberOfWorkspacesPerUser: 5
+    maxNumberOfRunningWorkspacesPerUser: 2
+    containerBuildConfiguration:
+      openShiftSecurityContextConstraint: container-build
+    disableContainerBuildCapabilities: false
+    defaultComponents:
+      - name: dev
+        container:
+          image: registry.redhat.io/devspaces/udi-rhel8:latest
+          memoryLimit: 6Gi
+          memoryRequest: 1Gi
+          cpuLimit: "2"
+          cpuRequest: 500m
+    defaultEditor: che-incubator/che-code/latest
+    defaultNamespace:
+      autoProvision: true
+      template: <username>-devspaces
+    secondsOfInactivityBeforeIdling: 1800
+    storage:
+      pvcStrategy: per-user
+  gitServices: {}
+  networking: {}
