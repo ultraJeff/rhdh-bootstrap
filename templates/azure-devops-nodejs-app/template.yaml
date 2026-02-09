@@ -146,7 +146,7 @@ spec:
           content-type: 'application/json'
         path: /proxy/azure-devops/${{ parameters.organization }}/${{ parameters.project }}/_apis/pipelines?api-version=7.1
         body:
-          name: ${{ parameters.name }}
+          name: ${{ parameters.name }}-ci
           folder: '\'
           configuration:
             type: yaml
