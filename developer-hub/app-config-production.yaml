@@ -140,6 +140,7 @@ data:
           target: https://dev.azure.com
           headers:
             Authorization: Basic ${AZURE_TOKEN_BASE64}
+            content-type: 'application/json'
           changeOrigin: true
     integrations:
       github:
