@@ -1,0 +1,211 @@
+apiVersion: sonataflow.org/v1alpha08
+kind: SonataFlow
+metadata:
+  name: trigger-azure-pipeline
+  namespace: rhdh
+  annotations:
+    sonataflow.org/description: Triggers an Azure DevOps pipeline build for a catalog component
+    sonataflow.org/version: "1.0"
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: trigger-azure-pipeline
+    sonataflow.org/workflow-app: trigger-azure-pipeline
+spec:
+  flow:
+    id: trigger-azure-pipeline
+    version: "1.0"
+    specVersion: "0.8"
+    name: Trigger Azure Pipeline Build
+    description: Triggers a CI/CD pipeline build in Azure DevOps for a specified component
+    annotations:
+      - "workflow-type/infrastructure"
+    start: ValidateInput
+    dataInputSchema:
+      schema: schemas/trigger-azure-pipeline-input.json
+      failOnValidationErrors: true
+    functions:
+      - name: triggerPipeline
+        type: rest
+        operation: "openapi/azure-devops-pipelines.yaml#runPipeline"
+      - name: logMessage
+        type: custom
+        operation: sysout
+    states:
+      - name: ValidateInput
+        type: switch
+        dataConditions:
+          - condition: .organization != null and .project != null and .pipelineId != null
+            transition: LogTriggerRequest
+        defaultCondition:
+          transition: ValidationFailed
+
+      - name: ValidationFailed
+        type: inject
+        data:
+          error: "Missing required input: organization, project, and pipelineId are required"
+          status: failed
+        end: true
+
+      - name: LogTriggerRequest
+        type: operation
+        actions:
+          - name: logRequest
+            functionRef:
+              refName: logMessage
+              arguments:
+                message: "Triggering Azure pipeline build"
+        transition: TriggerBuild
+
+      - name: TriggerBuild
+        type: operation
+        actions:
+          - name: runPipeline
+            functionRef:
+              refName: triggerPipeline
+              arguments:
+                organization: .organization
+                project: .project
+                pipelineId: .pipelineId
+                branch: .branch
+            actionDataFilter:
+              results: .buildResult
+        transition: BuildTriggered
+
+      - name: BuildTriggered
+        type: inject
+        data:
+          status: completed
+          message: "Azure pipeline build triggered successfully"
+        end: true
+  resources:
+    configMaps:
+      - configMap:
+          name: trigger-azure-pipeline-schemas
+        workflowPath: schemas
+      - configMap:
+          name: azure-devops-openapi-spec
+        workflowPath: openapi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trigger-azure-pipeline-schemas
+  namespace: rhdh
+  labels:
+    app: trigger-azure-pipeline
+data:
+  trigger-azure-pipeline-input.json: |
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "title": "Trigger Azure Pipeline Build",
+      "description": "Input parameters for triggering an Azure DevOps pipeline build",
+      "required": ["organization", "project", "pipelineId"],
+      "properties": {
+        "organization": {
+          "type": "string",
+          "title": "Azure DevOps Organization",
+          "description": "The Azure DevOps organization name",
+          "default": "jefrfranklin"
+        },
+        "project": {
+          "type": "string",
+          "title": "Azure DevOps Project",
+          "description": "The Azure DevOps project name",
+          "default": "a-project"
+        },
+        "pipelineId": {
+          "type": "string",
+          "title": "Pipeline ID",
+          "description": "The ID or name of the pipeline to trigger"
+        },
+        "branch": {
+          "type": "string",
+          "title": "Branch",
+          "description": "The branch to build (defaults to main)",
+          "default": "main"
+        },
+        "requestedBy": {
+          "type": "string",
+          "title": "Requested By",
+          "description": "Name or ID of the person triggering the build"
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-devops-openapi-spec
+  namespace: rhdh
+  labels:
+    app: trigger-azure-pipeline
+data:
+  azure-devops-pipelines.yaml: |
+    openapi: 3.0.0
+    info:
+      title: Azure DevOps Pipelines API
+      version: "7.1"
+      description: API for triggering Azure DevOps pipeline builds
+    servers:
+      - url: https://dev.azure.com
+    paths:
+      /{organization}/{project}/_apis/pipelines/{pipelineId}/runs:
+        post:
+          operationId: runPipeline
+          summary: Run a pipeline
+          parameters:
+            - name: organization
+              in: path
+              required: true
+              schema:
+                type: string
+            - name: project
+              in: path
+              required: true
+              schema:
+                type: string
+            - name: pipelineId
+              in: path
+              required: true
+              schema:
+                type: string
+            - name: api-version
+              in: query
+              required: true
+              schema:
+                type: string
+                default: "7.1"
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    resources:
+                      type: object
+                      properties:
+                        repositories:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                refName:
+                                  type: string
+          responses:
+            '200':
+              description: Pipeline run started
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      state:
+                        type: string
+                      _links:
+                        type: object

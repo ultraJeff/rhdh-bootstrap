@@ -4,7 +4,7 @@ metadata:
   name: utility-rate-report
   namespace: rhdh
   annotations:
-    sonataflow.org/description: Generates utility rate reports based on weather conditions
+    sonataflow.org/description: Triggers a CI/CD pipeline build in Azure DevOps
     sonataflow.org/version: "1.0"
     argocd.argoproj.io/sync-wave: "4"
   labels:
@@ -15,8 +15,8 @@ spec:
     id: utility-rate-report
     version: "1.0"
     specVersion: "0.8"
-    name: Utility Rate Report Generator
-    description: Generates a utility rate report for a specified city based on current weather conditions
+    name: Trigger Azure Pipeline Build
+    description: Triggers a CI/CD pipeline build in Azure DevOps for a catalog component
     annotations:
       - "workflow-type/infrastructure"
     start: GetWeatherData
