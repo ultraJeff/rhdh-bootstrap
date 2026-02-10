@@ -1,0 +1,115 @@
+apiVersion: sonataflow.org/v1alpha08
+kind: SonataFlow
+metadata:
+  name: utility-rate-report
+  namespace: rhdh
+  annotations:
+    sonataflow.org/description: Generates utility rate reports based on weather conditions
+    sonataflow.org/version: "1.0"
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: utility-rate-report
+    sonataflow.org/workflow-app: utility-rate-report
+spec:
+  flow:
+    id: utility-rate-report
+    version: "1.0"
+    specVersion: "0.8"
+    name: Utility Rate Report Generator
+    description: Generates a utility rate report for a specified city based on current weather conditions
+    annotations:
+      - "workflow-type/infrastructure"
+    start: GetWeatherData
+    dataInputSchema:
+      schema: schemas/utility-rate-report-input.json
+      failOnValidationErrors: true
+    functions:
+      - name: getWeather
+        type: rest
+        operation: "openapi/utilities-gateway.yaml#getWeather"
+      - name: getRates
+        type: rest
+        operation: "openapi/utilities-gateway.yaml#getRates"
+      - name: logMessage
+        type: custom
+        operation: sysout
+    states:
+      - name: GetWeatherData
+        type: operation
+        actions:
+          - name: fetchWeather
+            functionRef:
+              refName: getWeather
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .weather
+        transition: GetRateQuotes
+
+      - name: GetRateQuotes
+        type: operation
+        actions:
+          - name: fetchRates
+            functionRef:
+              refName: getRates
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .rateQuote
+        transition: GenerateReport
+
+      - name: GenerateReport
+        type: operation
+        actions:
+          - name: createReport
+            functionRef:
+              refName: logMessage
+              arguments:
+                message: "Utility Rate Report generated for city"
+        transition: SetOutput
+
+      - name: SetOutput
+        type: inject
+        data:
+          status: completed
+          message: "Rate report generated successfully"
+        end: true
+  resources:
+    configMaps:
+      - configMap:
+          name: utility-rate-report-schemas
+        workflowPath: schemas
+      - configMap:
+          name: utilities-openapi-spec
+        workflowPath: openapi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: utility-rate-report-schemas
+  namespace: rhdh
+  labels:
+    app: utility-rate-report
+data:
+  utility-rate-report-input.json: |
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "title": "Utility Rate Report Input",
+      "description": "Input parameters for generating a utility rate report",
+      "required": ["city"],
+      "properties": {
+        "city": {
+          "type": "string",
+          "title": "City",
+          "description": "City to generate the rate report for",
+          "enum": ["new-york", "london", "tokyo", "sydney", "paris"],
+          "default": "new-york"
+        },
+        "requestedBy": {
+          "type": "string",
+          "title": "Requested By",
+          "description": "Name or ID of the person requesting the report"
+        }
+      }
+    }

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Provision Utility Monitor",
+  "description": "Input parameters for provisioning a new utility monitoring service",
+  "required": ["serviceName", "city", "namespace"],
+  "properties": {
+    "serviceName": {
+      "type": "string",
+      "title": "Service Name",
+      "description": "Name for the new utility monitor service",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 3,
+      "maxLength": 63
+    },
+    "city": {
+      "type": "string",
+      "title": "City to Monitor",
+      "description": "City for which to monitor utility rates",
+      "enum": ["new-york", "london", "tokyo", "sydney", "paris"],
+      "default": "new-york"
+    },
+    "namespace": {
+      "type": "string",
+      "title": "Namespace",
+      "description": "Kubernetes namespace to deploy to",
+      "default": "utilities"
+    },
+    "owner": {
+      "type": "string",
+      "title": "Owner",
+      "description": "Owner of this service (Backstage entity reference)",
+      "default": "user:default/admin"
+    },
+    "alertThreshold": {
+      "type": "number",
+      "title": "Rate Alert Threshold",
+      "description": "Percentage increase that triggers an alert",
+      "default": 25,
+      "minimum": 5,
+      "maximum": 100
+    }
+  }
+}

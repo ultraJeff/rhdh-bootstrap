@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Utility Rate Report Input",
+  "description": "Input parameters for generating a utility rate report",
+  "required": ["city"],
+  "properties": {
+    "city": {
+      "type": "string",
+      "title": "City",
+      "description": "City to generate the rate report for",
+      "enum": ["new-york", "london", "tokyo", "sydney", "paris"],
+      "default": "new-york"
+    },
+    "requestedBy": {
+      "type": "string",
+      "title": "Requested By",
+      "description": "Name or ID of the person requesting the report"
+    }
+  }
+}

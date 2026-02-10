@@ -1,0 +1,69 @@
+id: utility-rate-report
+version: "1.0"
+specVersion: "0.8"
+name: Utility Rate Report Generator
+description: Generates a utility rate report for a specified city based on current weather conditions
+annotations:
+  - "workflow-type/infrastructure"
+dataInputSchema: schemas/utility-rate-report-input.json
+start: GetWeatherData
+functions:
+  - name: getWeather
+    type: rest
+    operation: "http://utilities-gateway.utilities.svc.cluster.local:3000/api/weather/{city}#get"
+  - name: getRates
+    type: rest
+    operation: "http://utilities-gateway.utilities.svc.cluster.local:3000/api/rates/{city}#get"
+  - name: logMessage
+    type: custom
+    operation: sysout
+states:
+  - name: GetWeatherData
+    type: operation
+    actions:
+      - name: fetchWeather
+        functionRef:
+          refName: getWeather
+          arguments:
+            city: .city
+        actionDataFilter:
+          results: .weather
+    transition: GetRateQuotes
+
+  - name: GetRateQuotes
+    type: operation
+    actions:
+      - name: fetchRates
+        functionRef:
+          refName: getRates
+          arguments:
+            city: .city
+        actionDataFilter:
+          results: .rateQuote
+    transition: GenerateReport
+
+  - name: GenerateReport
+    type: operation
+    actions:
+      - name: createReport
+        functionRef:
+          refName: logMessage
+          arguments:
+            message: |
+              Utility Rate Report for ${.city}
+              ================================
+              Weather: ${.weather.temperature}°F, ${.weather.conditions}
+              
+              Current Rates:
+              - Electricity: $${.rateQuote.rates[0].adjustedRate}/${.rateQuote.rates[0].unit} (${.rateQuote.rates[0].reason})
+              - Natural Gas: $${.rateQuote.rates[1].adjustedRate}/${.rateQuote.rates[1].unit} (${.rateQuote.rates[1].reason})
+              - Water: $${.rateQuote.rates[2].adjustedRate}/${.rateQuote.rates[2].unit} (${.rateQuote.rates[2].reason})
+              - Solar Buyback: $${.rateQuote.rates[3].adjustedRate}/${.rateQuote.rates[3].unit} (${.rateQuote.rates[3].reason})
+    transition: SetOutput
+
+  - name: SetOutput
+    type: inject
+    data:
+      status: completed
+      message: "Rate report generated successfully"
+    end: true

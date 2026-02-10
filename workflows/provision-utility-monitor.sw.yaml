@@ -1,0 +1,118 @@
+id: provision-utility-monitor
+version: "1.0"
+specVersion: "0.8"
+name: Provision Utility Monitor
+description: Provisions a new utility monitoring service for a specific city
+annotations:
+  - "workflow-type/infrastructure"
+dataInputSchema: schemas/provision-utility-monitor-input.json
+start: ValidateInput
+functions:
+  - name: createNamespace
+    type: custom
+    operation: "specs/kube.yaml#createNamespace"
+  - name: createDeployment
+    type: custom
+    operation: "specs/kube.yaml#createDeployment"
+  - name: createService
+    type: custom
+    operation: "specs/kube.yaml#createService"
+  - name: createRoute
+    type: custom
+    operation: "specs/kube.yaml#createRoute"
+  - name: getWeather
+    type: rest
+    operation: "http://utilities-gateway.utilities.svc.cluster.local:3000/api/weather/{city}#get"
+  - name: getRates
+    type: rest
+    operation: "http://utilities-gateway.utilities.svc.cluster.local:3000/api/rates/{city}#get"
+  - name: logMessage
+    type: custom
+    operation: sysout
+  - name: runScaffolderAction
+    type: rest
+    operation: "specs/scaffolder.yaml#runAction"
+states:
+  - name: ValidateInput
+    type: switch
+    dataConditions:
+      - condition: .serviceName != null and .city != null and .namespace != null
+        transition: CheckExistingResources
+    defaultCondition:
+      transition: ValidationFailed
+
+  - name: ValidationFailed
+    type: inject
+    data:
+      status: failed
+      error: "Missing required input: serviceName, city, and namespace are required"
+    end: true
+
+  - name: CheckExistingResources
+    type: operation
+    actions:
+      - name: logCheck
+        functionRef:
+          refName: logMessage
+          arguments:
+            message: "Checking for existing resources for ${.serviceName} in namespace ${.namespace}"
+    transition: FetchInitialData
+
+  - name: FetchInitialData
+    type: parallel
+    branches:
+      - name: weatherBranch
+        actions:
+          - name: getWeatherData
+            functionRef:
+              refName: getWeather
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .initialWeather
+      - name: ratesBranch
+        actions:
+          - name: getRatesData
+            functionRef:
+              refName: getRates
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .initialRates
+    transition: CreateResources
+
+  - name: CreateResources
+    type: operation
+    actions:
+      - name: logProvisioning
+        functionRef:
+          refName: logMessage
+          arguments:
+            message: |
+              Provisioning utility monitor: ${.serviceName}
+              Namespace: ${.namespace}
+              City: ${.city}
+              Initial Weather: ${.initialWeather.temperature}°F, ${.initialWeather.conditions}
+              Initial Electricity Rate: $${.initialRates.rates[0].adjustedRate}/${.initialRates.rates[0].unit}
+    transition: RegisterInCatalog
+
+  - name: RegisterInCatalog
+    type: operation
+    actions:
+      - name: logRegistration
+        functionRef:
+          refName: logMessage
+          arguments:
+            message: "Registering ${.serviceName} in Backstage catalog"
+    transition: ProvisioningComplete
+
+  - name: ProvisioningComplete
+    type: inject
+    data:
+      status: completed
+      message: "Utility monitor provisioned successfully"
+      outputs:
+        serviceName: "${.serviceName}"
+        namespace: "${.namespace}"
+        monitoredCity: "${.city}"
+    end: true

@@ -70,6 +70,13 @@ data:
         # Azure DevOps Node.js template (from this repo)
         - type: url
           target: https://github.com/ultraJeff/rhdh-ado-bootstrap/blob/main/templates/azure-devops-nodejs-app/template.yaml
+        # Utilities microservices (GitHub ultraJeff)
+        - type: url
+          target: https://github.com/ultraJeff/utilities-gateway/blob/main/catalog-info.yaml
+        - type: url
+          target: https://github.com/ultraJeff/utilities-weather/blob/main/catalog-info.yaml
+        - type: url
+          target: https://github.com/ultraJeff/utilities-quotes/blob/main/catalog-info.yaml
       providers:
         keycloakOrg:
           default:
@@ -107,6 +114,18 @@ data:
               seconds: 15
             timeout:
               minutes: 15
+        # GitHub discovery for ultraJeff repos with catalog-info.yaml
+        githubDiscovery:
+          ultraJeff:
+            organization: ultraJeff
+            catalogPath: /catalog-info.yaml
+            schedule:
+              frequency:
+                minutes: 10
+              initialDelay:
+                seconds: 30
+              timeout:
+                minutes: 3
         # Note: Azure DevOps catalog provider requires backstage-plugin-catalog-backend-module-azure
         # which is not available as a dynamic plugin in RHDH 1.8. Use catalog locations instead.
         # azureDevOps:
