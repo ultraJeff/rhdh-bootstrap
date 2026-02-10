@@ -150,6 +150,13 @@ stages:
                   --image=$(IMAGE_URL):$(Build.BuildId) \
                   -n $(NAMESPACE)
                 
+                # Add labels for Backstage Topology view
+                oc label deployment $(APP_NAME) \
+                  backstage.io/kubernetes-id=$(APP_NAME) \
+                  app.kubernetes.io/name=$(APP_NAME) \
+                  app.kubernetes.io/part-of=$(APP_NAME) \
+                  -n $(NAMESPACE)
+                
                 # Wait for deployment to be ready
                 oc rollout status deployment/$(APP_NAME) -n $(NAMESPACE) --timeout=300s
                 

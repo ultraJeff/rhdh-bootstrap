@@ -23,6 +23,9 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes
         disabled: false
+      # Topology view
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
+        disabled: false
       # ArgoCD integration
       - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
         disabled: false
@@ -48,5 +51,16 @@ data:
       - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
         disabled: false
       # Dev Spaces integration
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-devspaces
-        disabled: false
+      # Note: Not bundled with RHDH 1.8 - needs to be installed from npm
+      # - package: '@backstage-community/plugin-devspaces'
+      #   disabled: false
+      #   pluginConfig:
+      #     dynamicPlugins:
+      #       frontend:
+      #         backstage-community.plugin-devspaces:
+      #           mountPoints:
+      #             - mountPoint: entity.page.overview/cards
+      #               importName: DevSpacesCard
+      #               config:
+      #                 layout:
+      #                   gridColumnEnd: span 4

@@ -6,6 +6,8 @@ metadata:
   annotations:
     dev.azure.com/project-repo: ${{ values.project }}/${{ values.name }}
     dev.azure.com/build-definition: ${{ values.name }}-ci
+    backstage.io/kubernetes-id: ${{ values.name }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
   tags:
     - nodejs
     - typescript

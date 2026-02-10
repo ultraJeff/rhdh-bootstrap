@@ -46,5 +46,8 @@ spec:
     secondsOfInactivityBeforeIdling: 1800
     storage:
       pvcStrategy: per-user
+  # Azure DevOps OAuth 2.0 is deprecated (2026 full deprecation)
+  # Users will be prompted to enter their Azure DevOps PAT when opening a workspace
+  # See: https://eclipse.dev/che/docs/stable/end-user-guide/using-a-git-provider-access-token/
   gitServices: {}
   networking: {}
