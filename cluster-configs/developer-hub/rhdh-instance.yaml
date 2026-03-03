@@ -1,0 +1,50 @@
+---
+apiVersion: rhdh.redhat.com/v1alpha3
+kind: Backstage
+metadata:
+  name: developer-hub
+  namespace: rhdh
+  labels:
+    app.kubernetes.io/name: backstage
+    config.openshift.io/component: developer-hub
+    config.openshift.io/managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  database:
+    enableLocalDb: true
+  deployment:
+    patch:
+      spec:
+        template:
+          spec:
+            automountServiceAccountToken: true
+            volumes:
+              - $patch: replace
+                name: dynamic-plugins-root
+                persistentVolumeClaim:
+                  claimName: dynamic-plugins-root
+  application:
+    dynamicPluginsConfigMapName: rhdh-dynamic-plugins
+
+    appConfig:
+      configMaps:
+      - name: app-config-rhdh
+      mountPath: /opt/app-root/src
+
+    extraEnvs:
+      secrets:
+      - name: my-rhdh-secrets
+      - name: keycloak-secrets
+      - name: argocd-secrets
+
+    extraFiles:
+      mountPath: /opt/app-root/src
+      configMaps:
+        - name: rbac-policies
+
+    replicas: 1
+
+    route:
+      enabled: true

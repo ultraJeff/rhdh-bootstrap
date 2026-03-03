@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Documentation
+metadata:
+  name: platform-docs
+  title: Platform Documentation
+  description: Documentation for the Developer Hub platform, deployment, and software templates
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - platform
+    - documentation
+    - rhdh
+spec:
+  owner: user:default/admin
+  type: techdocs

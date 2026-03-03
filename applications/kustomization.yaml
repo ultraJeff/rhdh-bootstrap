@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: argocd-applications
+
+# Sync wave ordering:
+#   Wave 1: keycloak, pipelines, quay (independent operators)
+#   Wave 2: dev-spaces, orchestrator (depend on operators)
+#   Wave 3: developer-hub (depends on keycloak + operators)
+
+resources:
+  - keycloak.yaml
+  - pipelines.yaml
+  - quay.yaml
+  - dev-spaces.yaml
+  - orchestrator.yaml
+  - developer-hub.yaml

@@ -1,0 +1,153 @@
+apiVersion: sonataflow.org/v1alpha08
+kind: SonataFlow
+metadata:
+  name: provision-utility-monitor
+  namespace: rhdh
+  annotations:
+    sonataflow.org/description: Provisions a new utility monitoring service
+    sonataflow.org/version: "1.0"
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: provision-utility-monitor
+    sonataflow.org/workflow-app: provision-utility-monitor
+spec:
+  flow:
+    id: provision-utility-monitor
+    version: "1.0"
+    specVersion: "0.8"
+    name: Provision Utility Monitor
+    description: Provisions a new utility monitoring service for a specific city
+    annotations:
+      - "workflow-type/infrastructure"
+    start: ValidateInput
+    dataInputSchema:
+      schema: schemas/provision-utility-monitor-input.json
+      failOnValidationErrors: true
+    functions:
+      - name: getWeather
+        type: rest
+        operation: "openapi/utilities-gateway.yaml#getWeather"
+      - name: getRates
+        type: rest
+        operation: "openapi/utilities-gateway.yaml#getRates"
+      - name: logMessage
+        type: custom
+        operation: sysout
+    states:
+      - name: ValidateInput
+        type: switch
+        dataConditions:
+          - condition: .serviceName != null and .city != null and .namespace != null
+            transition: FetchInitialData
+        defaultCondition:
+          transition: ValidationFailed
+
+      - name: ValidationFailed
+        type: inject
+        data:
+          status: failed
+          error: "Missing required input: serviceName, city, and namespace are required"
+        end: true
+
+      - name: FetchInitialData
+        type: operation
+        actions:
+          - name: getWeatherData
+            functionRef:
+              refName: getWeather
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .initialWeather
+        transition: GetRates
+
+      - name: GetRates
+        type: operation
+        actions:
+          - name: getRatesData
+            functionRef:
+              refName: getRates
+              arguments:
+                city: .city
+            actionDataFilter:
+              results: .initialRates
+        transition: LogProvisioning
+
+      - name: LogProvisioning
+        type: operation
+        actions:
+          - name: logProvisioningDetails
+            functionRef:
+              refName: logMessage
+              arguments:
+                message: "Provisioning utility monitor for city"
+        transition: ProvisioningComplete
+
+      - name: ProvisioningComplete
+        type: inject
+        data:
+          status: completed
+          message: "Utility monitor provisioned successfully"
+        end: true
+  resources:
+    configMaps:
+      - configMap:
+          name: provision-utility-monitor-schemas
+        workflowPath: schemas
+      - configMap:
+          name: utilities-openapi-spec
+        workflowPath: openapi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provision-utility-monitor-schemas
+  namespace: rhdh
+  labels:
+    app: provision-utility-monitor
+data:
+  provision-utility-monitor-input.json: |
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "title": "Provision Utility Monitor",
+      "description": "Input parameters for provisioning a new utility monitoring service",
+      "required": ["serviceName", "city", "namespace"],
+      "properties": {
+        "serviceName": {
+          "type": "string",
+          "title": "Service Name",
+          "description": "Name for the new utility monitor service",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "minLength": 3,
+          "maxLength": 63
+        },
+        "city": {
+          "type": "string",
+          "title": "City to Monitor",
+          "description": "City for which to monitor utility rates",
+          "enum": ["new-york", "london", "tokyo", "sydney", "paris"],
+          "default": "new-york"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace",
+          "description": "Kubernetes namespace to deploy to",
+          "default": "utilities"
+        },
+        "owner": {
+          "type": "string",
+          "title": "Owner",
+          "description": "Owner of this service (Backstage entity reference)",
+          "default": "user:default/admin"
+        },
+        "alertThreshold": {
+          "type": "number",
+          "title": "Rate Alert Threshold",
+          "description": "Percentage increase that triggers an alert",
+          "default": 25,
+          "minimum": 5,
+          "maximum": 100
+        }
+      }
+    }

@@ -1,0 +1,13 @@
+site_name: Platform Documentation
+site_description: Developer Hub Platform Documentation
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Prerequisites: getting-started/prerequisites.md
+  - Orchestrator:
+    - Workflows: orchestrator/workflows.md
+
+plugins:
+  - techdocs-core

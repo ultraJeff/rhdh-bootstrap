@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: developer-hub-configs
+
+resources:
+- namespace.yaml
+- rhdh-operator.yaml
+- dynamic-plugins.yaml
+- dynamic-plugins-root-pvc.yaml
+- app-config-production.yaml
+- rbac-policies.yaml
+- kubernetes-rbac.yaml
+- rhdh-instance.yaml
+
+commonLabels:
+  config.openshift.io/component: developer-hub
+  config.openshift.io/managed-by: gitops

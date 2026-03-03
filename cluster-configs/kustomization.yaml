@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: cluster-bootstrap-configs
+  annotations:
+    config.openshift.io/description: "OpenShift cluster bootstrap configurations for RHDH"
+
+resources:
+# OpenShift GitOps operator (ArgoCD)
+- gitops/
+
+# Security configurations (RBAC, authentication)
+- security/
+
+# OpenShift Pipelines (Tekton)
+- pipelines/
+
+# Quay container registry operator
+- quay/
+
+# Keycloak (Red Hat build of Keycloak)
+- keycloak/
+
+# Red Hat Developer Hub (Backstage)
+- developer-hub/
+
+# OpenShift Dev Spaces
+- dev-spaces/
+
+# Orchestrator operators (Serverless + Serverless Logic + Orchestrator)
+- orchestrator/
+
+commonLabels:
+  config.openshift.io/bootstrap: "true"
+  config.openshift.io/managed-by: gitops
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true

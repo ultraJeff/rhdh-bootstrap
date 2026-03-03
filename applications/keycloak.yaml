@@ -1,0 +1,37 @@
+---
+# ArgoCD Application for Keycloak (RHBK)
+#
+# PREREQUISITES:
+#   Before this Application can sync successfully, you must apply secrets manually:
+#   oc apply -k cluster-configs/keycloak/secrets/
+#
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # IMPORTANT: Update this to your repo URL
+    repoURL: https://github.com/<YOUR_ORG>/rhdh-bootstrap.git
+    targetRevision: main
+    path: cluster-configs/keycloak
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keycloak
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

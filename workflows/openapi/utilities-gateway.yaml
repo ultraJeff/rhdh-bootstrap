@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Utilities Gateway API
+  version: 1.0.0
+servers:
+  - url: http://utilities-gateway.utilities.svc.cluster.local:3000
+paths:
+  /api/weather/{city}:
+    get:
+      operationId: getWeather
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Weather data
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/rates/{city}:
+    get:
+      operationId: getRates
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rate data
+          content:
+            application/json:
+              schema:
+                type: object
