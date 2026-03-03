@@ -8,6 +8,7 @@ metadata:
 #   Wave 1: keycloak, pipelines, quay (independent operators)
 #   Wave 2: dev-spaces, orchestrator (depend on operators)
 #   Wave 3: developer-hub (depends on keycloak + operators)
+#   Wave 4: workflows (depends on orchestrator CRDs)
 
 resources:
   - keycloak.yaml
@@ -16,3 +17,4 @@ resources:
   - dev-spaces.yaml
   - orchestrator.yaml
   - developer-hub.yaml
+  - workflows.yaml

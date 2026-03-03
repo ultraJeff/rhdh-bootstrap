@@ -1,37 +1,34 @@
 ---
-# ArgoCD Application for Keycloak (RHBK)
+# ArgoCD Application for Orchestrator Workflows (SonataFlow)
 #
-# PREREQUISITES:
-#   Before this Application can sync successfully, you must apply secrets manually:
-#   oc apply -k cluster-configs/keycloak/secrets/
+# Deploys after orchestrator operators are ready (wave 4).
+# Uses SkipDryRunOnMissingResource because SonataFlow CRDs
+# are installed by the orchestrator operator (wave 2).
 #
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: keycloak
+  name: workflows
   namespace: openshift-gitops
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "4"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    # IMPORTANT: Update this to your repo URL
     repoURL: https://github.com/<YOUR_ORG>/rhdh-bootstrap.git
     targetRevision: main
-    path: cluster-configs/keycloak
+    path: workflows
   destination:
     server: https://kubernetes.default.svc
-    namespace: keycloak
+    namespace: sonataflow-infra
   syncPolicy:
     automated:
       selfHeal: true
       prune: true
     syncOptions:
       - CreateNamespace=true
-      - PruneLast=true
-      - RespectIgnoreDifferences=true
       - SkipDryRunOnMissingResource=true
     retry:
       limit: 5
