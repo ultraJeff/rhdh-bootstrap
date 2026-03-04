@@ -28,8 +28,6 @@ spec:
       kind: SonataFlow
       jsonPointers:
         - /metadata/annotations/sonataflow.org~1restartedAt
-        - /metadata/annotations/sonataflow.org~1operatorBuildImageTag
-        - /spec/podTemplate/container/image
   syncPolicy:
     automated:
       selfHeal: true
