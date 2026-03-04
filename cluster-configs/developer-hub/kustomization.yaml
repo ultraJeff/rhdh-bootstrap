@@ -12,6 +12,7 @@ resources:
 - app-config-production.yaml
 - rbac-policies.yaml
 - kubernetes-rbac.yaml
+- console-link.yaml
 - rhdh-instance.yaml
 
 commonLabels:

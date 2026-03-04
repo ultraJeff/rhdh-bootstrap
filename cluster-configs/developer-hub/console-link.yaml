@@ -1,0 +1,14 @@
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  location: ApplicationMenu
+  applicationMenu:
+    section: Red Hat Applications
+    imageURL: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAzOCI+PHBhdGggZD0iTTE5IDBDOC41IDAgMCA4LjUgMCAxOXM4LjUgMTkgMTkgMTkgMTktOC41IDE5LTE5UzI5LjUgMCAxOSAwem0wIDM0Yy04LjMgMC0xNS02LjctMTUtMTVTMTAuNyA0IDE5IDRzMTUgNi43IDE1IDE1LTYuNyAxNS0xNSAxNXoiIGZpbGw9IiNlZTAwMDAiLz48cGF0aCBkPSJNMjUuNSAxMi41Yy0uOC0uOC0xLjgtMS4zLTIuOS0xLjVsLTUuMS0uNmMtLjMgMC0uNi4xLS44LjNsLTQuMSA0LjFjLS4yLjItLjMuNS0uMy44bC42IDUuMWMuMiAxLjEuNyAyLjEgMS41IDIuOSAxLjcgMS43IDQuNSAxLjcgNi4yIDBsNC45LTQuOWMxLjctMS43IDEuNy00LjUgMC02LjJ6bS0zLjkgOC4zLTIgMmMtLjguOC0yIC44LTIuOCAwbC0uNS0uNWMtLjgtLjgtLjgtMiAwLTIuOGwyLTJjLjgtLjggMi0uOCAyLjggMGwuNS41Yy44LjguOCAyIDAgMi44eiIgZmlsbD0iI2VlMDAwMCIvPjwvc3ZnPg==
+  href: https://backstage-developer-hub-rhdh.apps.cluster-k4mmh.k4mmh.sandbox32.opentlc.com
+  text: Red Hat Developer Hub

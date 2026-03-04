@@ -55,14 +55,20 @@ echo ""
 # -------------------------------------------------------------------
 # Populate placeholders in repo files
 # -------------------------------------------------------------------
-echo "--- Populating placeholders ---"
+echo "--- Populating cluster-specific values ---"
 
 sed -i '' "s|<YOUR_ORG>|${GH_ORG}|g" "$SCRIPT_DIR"/applications/*.yaml
-echo "  Replaced <YOUR_ORG> -> ${GH_ORG} in applications/*.yaml"
+echo "  Set repoURL org -> ${GH_ORG} in applications/*.yaml"
 
-sed -i '' "s|CLUSTER_DOMAIN_PLACEHOLDER|${CLUSTER_DOMAIN}|g" \
+# Replace keycloak hostname (works with placeholder or any previous domain)
+sed -i '' "s|hostname: sso\.apps\..*|hostname: sso.apps.${CLUSTER_DOMAIN}|g" \
   "$SCRIPT_DIR/cluster-configs/keycloak/keycloak-instance.yaml"
-echo "  Replaced CLUSTER_DOMAIN_PLACEHOLDER -> ${CLUSTER_DOMAIN} in keycloak-instance.yaml"
+echo "  Set keycloak hostname -> sso.apps.${CLUSTER_DOMAIN}"
+
+# Replace ConsoleLink href (works with placeholder or any previous domain)
+sed -i '' "s|href: https://backstage-developer-hub-rhdh\.apps\..*|href: https://backstage-developer-hub-rhdh.apps.${CLUSTER_DOMAIN}|g" \
+  "$SCRIPT_DIR/cluster-configs/developer-hub/console-link.yaml"
+echo "  Set console link -> https://backstage-developer-hub-rhdh.apps.${CLUSTER_DOMAIN}"
 echo ""
 
 # -------------------------------------------------------------------
