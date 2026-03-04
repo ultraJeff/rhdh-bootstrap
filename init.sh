@@ -185,7 +185,9 @@ echo ""
 # Phase 0: Install OpenShift GitOps operator
 # -------------------------------------------------------------------
 echo "--- Phase 0: Installing OpenShift GitOps operator ---"
-oc apply -k "$SCRIPT_DIR/cluster-configs/gitops/"
+
+# Step 1: Install the operator subscription (CRDs don't exist yet)
+oc apply -f "$SCRIPT_DIR/cluster-configs/gitops/gitops-operator.yaml"
 
 echo "Waiting for GitOps operator CSV to succeed..."
 until oc get csv -n openshift-gitops-operator 2>/dev/null | grep -q "openshift-gitops-operator.*Succeeded"; do
@@ -193,6 +195,21 @@ until oc get csv -n openshift-gitops-operator 2>/dev/null | grep -q "openshift-g
   sleep 15
 done
 echo "GitOps operator installed."
+
+echo "Waiting for openshift-gitops namespace..."
+until oc get namespace openshift-gitops &>/dev/null; do
+  echo "  ...waiting for namespace"
+  sleep 5
+done
+
+echo "Waiting for ArgoCD CRD..."
+until oc wait --for=condition=Established crd/argocds.argoproj.io --timeout=10s 2>/dev/null; do
+  echo "  ...waiting for ArgoCD CRD"
+  sleep 10
+done
+
+# Step 2: Now apply the full gitops config (ArgoCD instance, RBAC, secret patch)
+oc apply -k "$SCRIPT_DIR/cluster-configs/gitops/"
 
 echo "Waiting for ArgoCD instance to be ready..."
 until oc get argocd openshift-gitops -n openshift-gitops &>/dev/null; do
