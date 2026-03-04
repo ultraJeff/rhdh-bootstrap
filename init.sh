@@ -170,6 +170,26 @@ sed \
   "$SCRIPT_DIR/cluster-configs/keycloak/rhdh-realm-import.yaml.example" \
   > "$SCRIPT_DIR/cluster-configs/keycloak/rhdh-realm-import.yaml"
 echo "  Created rhdh-realm-import.yaml (domain=${CLUSTER_DOMAIN})"
+
+# 6. User Onboarding Workflow Secrets
+cat > "$SCRIPT_DIR/workflows/user-onboarding-secrets.yaml" <<EOFYAML
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-onboarding-secrets
+  namespace: rhdh
+  labels:
+    app: user-onboarding
+    app.kubernetes.io/component: serverless-workflow
+    app.kubernetes.io/managed-by: sonataflow-operator
+    app.kubernetes.io/name: user-onboarding
+    sonataflow.org/workflow-app: user-onboarding
+stringData:
+  BACKSTAGE_NOTIFICATIONS_URL: "http://backstage-developer-hub.rhdh"
+  NOTIFICATIONS_BEARER_TOKEN: ""
+  ONBOARDING_SERVER_URL: "http://user-onboarding-server.rhdh:8080"
+EOFYAML
+echo "  Created user-onboarding-secrets.yaml"
 echo ""
 
 # -------------------------------------------------------------------
@@ -252,6 +272,11 @@ echo "  Keycloak secrets applied."
 
 oc apply -k "$SCRIPT_DIR/cluster-configs/developer-hub/secrets/"
 echo "  Developer Hub secrets applied."
+
+if [[ -f "$SCRIPT_DIR/workflows/user-onboarding-secrets.yaml" ]]; then
+  oc apply -f "$SCRIPT_DIR/workflows/user-onboarding-secrets.yaml"
+  echo "  User onboarding workflow secrets applied."
+fi
 echo ""
 
 # -------------------------------------------------------------------

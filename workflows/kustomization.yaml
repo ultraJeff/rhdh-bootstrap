@@ -8,3 +8,4 @@ resources:
   - openapi-configmap.yaml
   - sonataflow-utility-rate-report.yaml
   - sonataflow-provision-utility-monitor.yaml
+  - sonataflow-user-onboarding.yaml

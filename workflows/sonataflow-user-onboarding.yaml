@@ -1,0 +1,479 @@
+apiVersion: sonataflow.org/v1alpha08
+kind: SonataFlow
+metadata:
+  name: user-onboarding
+  namespace: rhdh
+  annotations:
+    sonataflow.org/profile: gitops
+    sonataflow.org/description: Onboarding users - e.g for testing
+    sonataflow.org/expressionLang: jq
+    sonataflow.org/version: "1.0"
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: user-onboarding
+    app.kubernetes.io/component: serverless-workflow
+    app.kubernetes.io/managed-by: sonataflow-operator
+    app.kubernetes.io/name: user-onboarding
+    sonataflow.org/workflow-app: user-onboarding
+spec:
+  podTemplate:
+    container:
+      image: quay.io/orchestrator/demo-user-onboarding:osl_1_37
+      resources: {}
+      env:
+        - name: ONBOARDING_SERVER_URL
+          valueFrom:
+            secretKeyRef:
+              key: ONBOARDING_SERVER_URL
+              name: user-onboarding-secrets
+        - name: BACKSTAGE_NOTIFICATIONS_URL
+          valueFrom:
+            secretKeyRef:
+              key: BACKSTAGE_NOTIFICATIONS_URL
+              name: user-onboarding-secrets
+        - name: NOTIFICATIONS_BEARER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: NOTIFICATIONS_BEARER_TOKEN
+              name: user-onboarding-secrets
+  flow:
+    dataInputSchema:
+      failOnValidationErrors: true
+      schema: schemas/user-onboarding-schema.json
+    functions:
+      - name: checkUserOnboardingStatus
+        operation: specs/onboarding-openapi.yaml#onboardUser
+        type: rest
+      - name: createNotification
+        operation: notifications#createNotification
+        type: rest
+      - name: print
+        operation: sysout
+        type: custom
+      - name: successResult
+        operation: |
+          {
+            "result": {
+            "message": "User " + .userId + " is ready",
+            "outputs":[
+              {
+                "key":"User ID",
+                "value": .userId,
+                "format":"text"
+              },
+              {
+                "key":"Iteration Number",
+                "value": .iterationNum|tostring,
+                "format":"number"
+              }
+            ]
+            }
+          }
+        type: expression
+      - name: userStatusInProgressResult
+        operation: |
+          {
+            "result": {
+            "message": "User " + .userId + " is in progress",
+            "outputs":[
+              {
+                "key":"User ID",
+                "value": .userId,
+                "format":"text"
+              },
+              {
+                "key":"Iteration Number",
+                "value": .iterationNum|tostring,
+                "format":"number"
+              }
+            ]
+            }
+          }
+        type: expression
+    start:
+      stateName: Send new user request
+    states:
+      - actionMode: sequential
+        actions:
+          - actionDataFilter:
+              toStateData: .userOnboardingResponse
+              useResults: true
+            functionRef:
+              arguments:
+                name: .username
+                user_id: .userId
+              invoke: sync
+              refName: checkUserOnboardingStatus
+            name: checkUserOnboardingStatus
+          - actionDataFilter:
+              useResults: true
+            functionRef:
+              invoke: sync
+              refName: userStatusInProgressResult
+            name: setOutput
+        name: Send new user request
+        transition:
+          nextState: 'Notify: New user created'
+        type: operation
+      - actionMode: sequential
+        actions:
+          - actionDataFilter:
+              useResults: true
+            functionRef:
+              arguments:
+                payload:
+                  description: New user created
+                  severity: normal
+                  title: '"New user " + .userOnboardingResponse.user_id + " created"'
+                  topic: Onboarding users
+                recipients:
+                  entityRef: .recipients
+                  type: entity
+              invoke: sync
+              refName: createNotification
+            name: 'Create notification: New user created'
+          - actionDataFilter:
+              useResults: true
+            functionRef:
+              invoke: sync
+              refName: userStatusInProgressResult
+            name: setOutput
+        name: 'Notify: New user created'
+        transition:
+          nextState: Poll user onboarding status
+        type: operation
+      - actionMode: sequential
+        actions:
+          - actionDataFilter:
+              toStateData: .userOnboardingResponse
+              useResults: true
+            functionRef:
+              arguments:
+                name: .username
+                user_id: .userId
+              invoke: sync
+              refName: checkUserOnboardingStatus
+            name: Get user onboarding status
+            sleep:
+              before: PT3S
+        name: Poll user onboarding status
+        transition:
+          nextState: Check user onboarding completed
+        type: operation
+      - dataConditions:
+          - condition: .userOnboardingResponse.status == "In Progress"
+            name: User onboarding in progress
+            transition:
+              nextState: Poll user onboarding status
+          - condition: .userOnboardingResponse.status == "Ready"
+            name: User onboarding completed
+            transition:
+              nextState: 'Notify: User onboarding completed'
+        defaultCondition:
+          transition:
+            nextState: Poll user onboarding status
+        name: Check user onboarding completed
+        type: switch
+      - actionMode: sequential
+        actions:
+          - actionDataFilter:
+              useResults: true
+            functionRef:
+              arguments:
+                payload:
+                  description: Onboarding user completed
+                  severity: normal
+                  title: '"Onboarding user " + .userId + " completed"'
+                  topic: Onboarding users
+                recipients:
+                  entityRef: .recipients
+                  type: entity
+              invoke: sync
+              refName: createNotification
+            name: 'Create notification: Onboarding user completed'
+          - actionDataFilter:
+              useResults: true
+            functionRef:
+              invoke: sync
+              refName: successResult
+            name: setOutput
+        end:
+          terminate: true
+        name: 'Notify: User onboarding completed'
+        type: operation
+  resources:
+    configMaps:
+      - configMap:
+          name: 01-user-onboarding-resources-schemas
+        workflowPath: schemas
+      - configMap:
+          name: 02-user-onboarding-resources-specs
+        workflowPath: specs
+  persistence:
+    postgresql:
+      secretRef:
+        name: backstage-psql-secret-developer-hub
+        userKey: POSTGRES_USER
+        passwordKey: POSTGRES_PASSWORD
+      serviceRef:
+        name: backstage-psql-developer-hub
+        port: 5432
+        databaseName: backstage_plugin_orchestrator
+        databaseSchema: user-onboarding
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-onboarding-props
+  namespace: rhdh
+  labels:
+    app: user-onboarding
+    app.kubernetes.io/component: serverless-workflow
+    app.kubernetes.io/managed-by: sonataflow-operator
+    app.kubernetes.io/name: user-onboarding
+    sonataflow.org/workflow-app: user-onboarding
+data:
+  application.properties: |-
+    quarkus.rest-client.notifications.url=${BACKSTAGE_NOTIFICATIONS_URL}
+    quarkus.openapi-generator.notifications.auth.BearerToken.bearer-token=${NOTIFICATIONS_BEARER_TOKEN}
+    quarkus.rest-client.onboarding_openapi_yaml.url=${ONBOARDING_SERVER_URL}
+    quarkus.tls.trust-all=true
+    quarkus.kubernetes-client.trust-certs=true
+    quarkus.flyway.migrate-at-start=true
+    quarkus.log.category."org.apache.http".level=INFO
+    quarkus.log.level=INFO
+    kie.flyway.enabled = true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: 01-user-onboarding-resources-schemas
+  namespace: rhdh
+data:
+  user-onboarding-schema.json: |
+    {
+      "$id": "classpath:/schemas/user-onboarding-schema.json",
+      "title": "Workflow input data",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "title": "The user ID that triggers the workflow",
+          "description": "The user that triggers the workflow",
+          "type": "string",
+          "default": "user:default/guest"
+        },
+        "iterationNum": {
+          "title": "The iteration number for running the workflow",
+          "description": "The iteration number for running the workflow",
+          "type": "integer"
+        },
+        "username": {
+          "title": "The name of the user",
+          "description": "The name of the user",
+          "type": "string",
+          "pattern": "^[a-zA-Z]*"
+        },
+        "recipients": {
+          "title": "Recipients",
+          "type": "array",
+          "description": "A list of recipients for the notification in the format of 'user:<namespace>/<username>' or 'group:<namespace>/<groupname>', i.e. 'user:default/jsmith'",
+          "items": {
+            "title": "Recipient",
+            "type": "string",
+            "pattern": "^(user|group):[a-z0-9]([-a-z0-9]*[a-z0-9])?/([a-z0-9]([-a-z0-9]*[a-z0-9])?)$"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "userId",
+        "iterationNum",
+        "recipients"
+      ]
+    }
+  workflow-output-schema.json: |-
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "WorkflowResult",
+        "description": "Schema of workflow output",
+        "type": "object",
+        "properties": {
+            "result": {
+                "$ref": "./workflow-result-schema.json",
+                "type": "object"
+            }
+        }
+    }
+  workflow-result-schema.json: |-
+    {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "WorkflowResult",
+        "description": "Result of a workflow execution",
+        "type": "object",
+        "properties": {
+            "message": {
+                "description": "High-level summary of the current status, free-form text, human readable.",
+                "type": "string"
+            },
+            "nextWorkflows": {
+                "description": "List of workflows suggested to run next. Items at lower indexes are of higher priority.",
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "description": "Workflow identifier",
+                            "type": "string"
+                        },
+                        "name": {
+                            "description": "Human readable title describing the workflow.",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "name"
+                    ]
+                }
+            },
+            "outputs": {
+                "description": "Additional structured output of workflow processing.",
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "key": {
+                            "description": "Unique identifier of the option. Preferably human-readable.",
+                            "type": "string"
+                        },
+                        "value": {
+                            "description": "Free form value of the option.",
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "number" }
+                            ]
+                        },
+                        "format": {
+                            "description": "More detailed type of the 'value' property. Defaults to 'text'.",
+                            "enum": ["text", "number", "link"]
+                        }
+                    },
+                    "required": ["key", "value"]
+                }
+            }
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: 02-user-onboarding-resources-specs
+  namespace: rhdh
+data:
+  onboarding-openapi.yaml: |
+    openapi: 3.0.3
+    info:
+      title: User Onboarding API
+      description: API for simulating a user onboarding process, where a user reaches "Ready" status after three requests.
+      version: 1.0.0
+    paths:
+      /onboard:
+        post:
+          summary: Initiates or checks the onboarding status of a user
+          description: |
+            - The first two requests for a given `user_id` return `"In Progress"`.
+            - The third request returns `"Ready"`, and starts a **5-minute** cleanup timer.
+            - After 5 minutes, the user is removed from the cache and starts fresh.
+          operationId: onboardUser
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/OnboardRequest"
+          responses:
+            "200":
+              description: Successfully retrieved onboarding status.
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/OnboardResponse"
+            "400":
+              description: Invalid request payload.
+            "405":
+              description: Invalid request method.
+    components:
+      schemas:
+        OnboardRequest:
+          type: object
+          required:
+            - user_id
+            - name
+          properties:
+            user_id:
+              type: string
+              description: Unique identifier for the user.
+              example: "12345"
+            name:
+              type: string
+              description: Name of the user.
+              example: "Alice Johnson"
+        OnboardResponse:
+          type: object
+          properties:
+            user_id:
+              type: string
+              description: Unique identifier for the user.
+              example: "12345"
+            status:
+              type: string
+              description: Current onboarding status.
+              enum:
+                - "In Progress"
+                - "Ready"
+              example: "In Progress"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-onboarding-server
+  namespace: rhdh
+  labels:
+    app: user-onboarding-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-onboarding-server
+  template:
+    metadata:
+      labels:
+        app: user-onboarding-server
+    spec:
+      containers:
+        - name: user-onboarding-server
+          image: quay.io/orchestrator/user-onboarding-server:v1
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-onboarding-server
+  namespace: rhdh
+spec:
+  selector:
+    app: user-onboarding-server
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
