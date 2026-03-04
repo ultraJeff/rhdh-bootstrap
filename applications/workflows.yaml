@@ -17,7 +17,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/<YOUR_ORG>/rhdh-bootstrap.git
+    repoURL: https://github.com/ultraJeff/rhdh-bootstrap.git
     targetRevision: main
     path: workflows
   destination:

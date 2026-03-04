@@ -18,7 +18,7 @@ spec:
   project: default
   source:
     # IMPORTANT: Update this to your repo URL
-    repoURL: https://github.com/<YOUR_ORG>/rhdh-bootstrap.git
+    repoURL: https://github.com/ultraJeff/rhdh-bootstrap.git
     targetRevision: main
     path: cluster-configs/developer-hub
   destination:

@@ -24,7 +24,7 @@ spec:
   hostname:
     # IMPORTANT: Update this to your cluster domain
     # Format: sso.apps.<cluster-domain>
-    hostname: sso.apps.CLUSTER_DOMAIN_PLACEHOLDER
+    hostname: sso.apps.cluster-k4mmh.k4mmh.sandbox32.opentlc.com
   ingress:
     enabled: true
     className: openshift-default
