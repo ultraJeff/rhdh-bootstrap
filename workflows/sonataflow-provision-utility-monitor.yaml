@@ -4,7 +4,7 @@ metadata:
   name: provision-utility-monitor
   namespace: rhdh
   annotations:
-    sonataflow.org/profile: preview
+    sonataflow.org/profile: gitops
     sonataflow.org/description: Provisions a new utility monitoring service
     sonataflow.org/version: "1.0"
     argocd.argoproj.io/sync-wave: "4"
@@ -12,6 +12,10 @@ metadata:
     app: provision-utility-monitor
     sonataflow.org/workflow-app: provision-utility-monitor
 spec:
+  podTemplate:
+    container:
+      image: image-registry.openshift-image-registry.svc:5000/rhdh/provision-utility-monitor:latest
+      resources: {}
   flow:
     id: provision-utility-monitor
     version: "1.0"
