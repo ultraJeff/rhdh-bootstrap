@@ -172,6 +172,10 @@ sed \
 echo "  Created rhdh-realm-import.yaml (domain=${CLUSTER_DOMAIN})"
 
 # 6. User Onboarding Workflow Secrets
+# Extract BACKEND_SECRET from the rhdh-secrets file (base64-encoded data: format)
+BACKEND_SECRET_B64=$(grep 'BACKEND_SECRET:' "$SCRIPT_DIR/cluster-configs/developer-hub/secrets/rhdh-secrets.yaml" | awk '{print $2}')
+BACKEND_SECRET=$(printf '%s' "$BACKEND_SECRET_B64" | base64 -d | tr -d '\n')
+
 cat > "$SCRIPT_DIR/workflows/user-onboarding-secrets.yaml" <<EOFYAML
 apiVersion: v1
 kind: Secret
@@ -186,10 +190,10 @@ metadata:
     sonataflow.org/workflow-app: user-onboarding
 stringData:
   BACKSTAGE_NOTIFICATIONS_URL: "http://backstage-developer-hub.rhdh"
-  NOTIFICATIONS_BEARER_TOKEN: ""
+  NOTIFICATIONS_BEARER_TOKEN: "${BACKEND_SECRET}"
   ONBOARDING_SERVER_URL: "http://user-onboarding-server.rhdh:8080"
 EOFYAML
-echo "  Created user-onboarding-secrets.yaml"
+echo "  Created user-onboarding-secrets.yaml (NOTIFICATIONS_BEARER_TOKEN from BACKEND_SECRET)"
 echo ""
 
 # -------------------------------------------------------------------
