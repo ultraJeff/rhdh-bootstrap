@@ -4,6 +4,7 @@ metadata:
   name: utility-rate-report
   namespace: rhdh
   annotations:
+    sonataflow.org/profile: preview
     sonataflow.org/description: Generates a utility rate report based on weather and rate data
     sonataflow.org/version: "1.0"
     argocd.argoproj.io/sync-wave: "4"

@@ -4,6 +4,7 @@ metadata:
   name: provision-utility-monitor
   namespace: rhdh
   annotations:
+    sonataflow.org/profile: preview
     sonataflow.org/description: Provisions a new utility monitoring service
     sonataflow.org/version: "1.0"
     argocd.argoproj.io/sync-wave: "4"
