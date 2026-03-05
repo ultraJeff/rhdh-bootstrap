@@ -65,11 +65,11 @@ data:
       # Tech Radar
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar
         disabled: false
-      # Open Cluster Management
+      # Open Cluster Management (disabled - requires catalog.providers.ocm config)
       - package: ./dynamic-plugins/dist/backstage-community-plugin-ocm-backend-dynamic
-        disabled: false
+        disabled: true
       - package: ./dynamic-plugins/dist/backstage-community-plugin-ocm
-        disabled: false
+        disabled: true
       # Security Insights (OCI - unbundled in 1.9)
       - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-security-insights:{{inherit}}'
         disabled: false
