@@ -26,27 +26,27 @@ data:
       # Topology view
       - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
         disabled: false
-      # ArgoCD integration
-      - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
+      # ArgoCD integration (OCI - new Red Hat backend + renamed frontend in 1.9)
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd-backend:{{inherit}}'
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-redhat-argocd
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:{{inherit}}'
         disabled: false
       # RBAC
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false
-      # Quay container registry
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-quay
+      # Quay container registry (OCI - unbundled in 1.9)
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-quay:{{inherit}}'
         disabled: false
-      # Scaffolder utils
-      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-utils-dynamic
+      # Scaffolder utils (OCI - unbundled in 1.9)
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-scaffolder-backend-module-utils:{{inherit}}'
         disabled: false
       # TechDocs
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
         disabled: false
-      # Tekton CI
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
+      # Tekton CI (OCI - unbundled in 1.9)
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-tekton:{{inherit}}'
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -70,11 +70,11 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-ocm
         disabled: false
-      # Security Insights
-      - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-security-insights
+      # Security Insights (OCI - unbundled in 1.9)
+      - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-security-insights:{{inherit}}'
         disabled: false
-      # Orchestrator plugins - serverless workflows integration
-      - package: "@redhat/backstage-plugin-orchestrator@1.8.2"
+      # Orchestrator plugins (OCI - required for 1.9 upgrade)
+      - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator:{{inherit}}'
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -89,7 +89,7 @@ data:
                       icon: orchestratorIcon
                       text: Orchestrator
                     path: /orchestrator
-      - package: "@redhat/backstage-plugin-orchestrator-backend-dynamic@1.8.2"
+      - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-backend:{{inherit}}'
         disabled: false
         pluginConfig:
           orchestrator:
@@ -97,13 +97,13 @@ data:
               url: http://sonataflow-platform-data-index-service.rhdh
         dependencies:
           - ref: sonataflow
-      - package: "@redhat/backstage-plugin-scaffolder-backend-module-orchestrator-dynamic@1.8.2"
+      - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-scaffolder-backend-module-orchestrator:{{inherit}}'
         disabled: false
         pluginConfig:
           orchestrator:
             dataIndexService:
               url: http://sonataflow-platform-data-index-service.rhdh
-      - package: "@redhat/backstage-plugin-orchestrator-form-widgets@1.8.2"
+      - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-form-widgets:{{inherit}}'
         disabled: false
         pluginConfig:
           dynamicPlugins:
