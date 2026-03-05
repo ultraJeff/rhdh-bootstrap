@@ -111,6 +111,8 @@ data:
               clientSecret: ${GITHUB_INTEGRATION_CLIENT_SECRET}
               privateKey: |
                 ${GITHUB_INTEGRATION_PRIVATE_KEY_FILE}
+    quay:
+      uiUrl: https://quay.io
     kubernetes:
       serviceLocatorMethod:
         type: multiTenant
