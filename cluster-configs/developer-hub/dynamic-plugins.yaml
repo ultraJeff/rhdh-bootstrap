@@ -37,6 +37,42 @@ data:
       # Quay container registry
       - package: ./dynamic-plugins/dist/backstage-community-plugin-quay
         disabled: false
+      # Scaffolder utils
+      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-utils-dynamic
+        disabled: false
+      # TechDocs
+      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
+        disabled: false
+      # Tekton CI
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage-community.plugin-tekton:
+                mountPoints:
+                  - config:
+                      if:
+                        allOf:
+                          - isTektonCIAvailable
+                      layout:
+                        gridColumn: 1 / -1
+                        gridRowStart: 1
+                    importName: TektonCI
+                    mountPoint: entity.page.ci/cards
+      # Tech Radar
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar
+        disabled: false
+      # Open Cluster Management
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-ocm-backend-dynamic
+        disabled: false
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-ocm
+        disabled: false
+      # Security Insights
+      - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-security-insights
+        disabled: false
       # Orchestrator plugins - serverless workflows integration
       - package: "@redhat/backstage-plugin-orchestrator@1.8.2"
         disabled: false
