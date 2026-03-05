@@ -331,6 +331,55 @@ echo "Realm import applied."
 echo ""
 
 # -------------------------------------------------------------------
+# Phase 5: Seed extensions file on dynamic-plugins-root PVC
+# -------------------------------------------------------------------
+echo "--- Phase 5: Seeding extensions installed-dynamic-plugins.yaml ---"
+
+echo "Waiting for dynamic-plugins-root PVC to be bound..."
+PVC_WAIT=0
+until oc get pvc dynamic-plugins-root -n rhdh \
+  -o jsonpath='{.status.phase}' 2>/dev/null | grep -q "Bound"; do
+  echo "  ...waiting for PVC (${PVC_WAIT}s)"
+  sleep 15
+  PVC_WAIT=$((PVC_WAIT + 15))
+  if [[ $PVC_WAIT -ge 300 ]]; then
+    echo "  WARNING: PVC not bound after 5 minutes, skipping extensions seed."
+    break
+  fi
+done
+
+if oc get pvc dynamic-plugins-root -n rhdh -o jsonpath='{.status.phase}' 2>/dev/null | grep -q "Bound"; then
+  echo "Waiting for a backstage pod to be running..."
+  POD_WAIT=0
+  until oc get pods -n rhdh -l app.kubernetes.io/name=backstage --field-selector=status.phase=Running \
+    --no-headers 2>/dev/null | grep -q backstage; do
+    echo "  ...waiting for backstage pod (${POD_WAIT}s)"
+    sleep 15
+    POD_WAIT=$((POD_WAIT + 15))
+    if [[ $POD_WAIT -ge 300 ]]; then
+      echo "  WARNING: No running backstage pod after 5 minutes, skipping extensions seed."
+      break
+    fi
+  done
+
+  BACKSTAGE_POD=$(oc get pods -n rhdh -l app.kubernetes.io/name=backstage \
+    --field-selector=status.phase=Running --no-headers 2>/dev/null \
+    | head -1 | awk '{print $1}')
+
+  if [[ -n "$BACKSTAGE_POD" ]]; then
+    oc exec "$BACKSTAGE_POD" -n rhdh -c backstage-backend -- \
+      bash -c 'if [ ! -f /opt/app-root/src/dynamic-plugins-root/installed-dynamic-plugins.yaml ]; then
+        echo "plugins: []" > /opt/app-root/src/dynamic-plugins-root/installed-dynamic-plugins.yaml
+        echo "Created installed-dynamic-plugins.yaml"
+      else
+        echo "installed-dynamic-plugins.yaml already exists"
+      fi' 2>&1
+    echo "  Extensions file seeded on PVC."
+  fi
+fi
+echo ""
+
+# -------------------------------------------------------------------
 # Done
 # -------------------------------------------------------------------
 echo "============================================"
