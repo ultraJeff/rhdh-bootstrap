@@ -33,8 +33,9 @@ data:
     p, role:default/admin_plugins, orchestrator.workflow.use, update, allow
     p, role:default/admin_plugins, orchestrator.workflowAdminView, read, allow
     p, role:default/admin_plugins, orchestrator.instanceAdminView, read, allow
-    p, role:default/admin_plugins, extensions.install, use, allow
-    p, role:default/admin_plugins, extensions.uninstall, use, allow
+    p, role:default/admin_plugins, extensions.plugin.configuration.read, read, allow
+    p, role:default/admin_plugins, extensions.plugin.configuration.write, create, allow
+    p, role:default/admin_plugins, extensions.plugin.configuration.delete, delete, allow
     g, user:default/admin, role:default/location_read
     g, user:default/admin, role:default/platformengineer
     g, user:default/admin, role:default/scaffolder_execute
