@@ -1,0 +1,9 @@
+[allowlist]
+  description = "Global Allowlist"
+
+  regexes = [
+    # bcrypt hash for ArgoCD developer-hub service account (bootstrap credential)
+    '''\$2y\$10\$KnsgxceFRwN15iVJ3BxskuIJ2/qUqzaLs8\.Oea1WzyvBraZxdG\.eu''',
+    # Plaintext bootstrap password for ArgoCD developer-hub service account
+    '''d3v3l0p3rs''',
+  ]
